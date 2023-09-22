@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Таблица исследований</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Таблица исследований</h1>
+        <table id="studies-table" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>ФИО пациента</th>
+                    <th>Дата рождения пациента</th>
+                    <th>Идентификатор исследования</th>
+                    <th>Дата и время исследования</th>
+                    <th>Модальность исследования</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for study in page %}
+                    <tr>
+                        <td>{{ study.patient_fio }}</td>
+                        <td>{{ study.patient_birthdate }}</td>
+                        <td>{{ study.study_uid }}</td>
+                        <td>{{ study.study_date }}</td>
+                        <td>{{ study.study_modality }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">Нет данных</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="pagination-container">
+            <span class="paginator">Страница {{ page.number }} из {{ page.paginator.num_pages }}.</span>
+            {% if page.has_previous %}
+                <a href="?page=1" class="paginator">Первая</a>
+                <a href="?page={{ page.previous_page_number }}" class="paginator">Предыдущая</a>
+            {% endif %}
+
+            {% for i in page.paginator.page_range %}
+                {% if page.number == i %}
+                    <span class="paginator current-page">{{ i }}</span>
+                {% elif i > page.number|add:"-5" and i < page.number|add:"5" %} {# Ограничиваем количество видимых страниц вокруг текущей #}
+                    <a href="?page={{ i }}" class="paginator">{{ i }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page.has_next %}
+                <a href="?page={{ page.next_page_number }}" class="paginator">Следующая</a>
+                <a href="?page={{ page.paginator.num_pages }}" class="paginator">Последняя</a>
+            {% endif %}
+        </div>
+
+        <button id="refresh-button" class="btn btn-primary">Обновить данные</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var table = $('#studies-table').DataTable();
+
+            $('#refresh-button').click(function() {
+                $.ajax({
+                    url: '/studies_table/',
+                    method: 'GET',
+                    success: function(response) {
+                        table.clear().rows.add(response).draw();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
